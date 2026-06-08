@@ -13,7 +13,10 @@ function stripHtml(html) {
 }
 
 async function fetchArticles(folder) {
-  const url = `${AEM_AUTHOR}${CF_API}?path=${encodeURIComponent(folder)}&limit=24`;
+  // aem-content href may be an absolute URL — extract just the pathname
+  let path = folder;
+  try { path = new URL(folder).pathname; } catch { /* already a path */ }
+  const url = `${AEM_AUTHOR}${CF_API}?path=${encodeURIComponent(path)}&limit=24`;
   const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const { items } = await res.json();
