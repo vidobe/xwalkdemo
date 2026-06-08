@@ -1,10 +1,12 @@
-// AEM publish/preview host for this environment – update if your env differs
-const AEM_HOST = 'https://publish-p60206-e1481934.adobeaemcloud.com';
-const GQL_URL = `${AEM_HOST}/content/_cq_graphql/aem-demo-assets/endpoint.json`;
+// AEM endpoints – author is tried first (works in UE where user is authenticated),
+// publish is the fallback for EDS delivery.
+const AEM_AUTHOR = 'https://author-p60206-e1481934.adobeaemcloud.com';
+const AEM_PUBLISH = 'https://publish-p60206-e1481934.adobeaemcloud.com';
+const GQL_PATH = '/content/_cq_graphql/aem-demo-assets/endpoint.json';
 const DESC_MAX = 120;
 
-async function fetchArticles(folder) {
-  const query = `{
+function buildQuery(folder) {
+  return `{
     articleList(filter: {
       _path: { _expressions: [{ value: ${JSON.stringify(folder)}, _operator: STARTS_WITH }] }
     }) {
@@ -15,16 +17,17 @@ async function fetchArticles(folder) {
       }
     }
   }`;
+}
 
-  const res = await fetch(GQL_URL, {
+async function gqlFetch(host, folder, opts = {}) {
+  const res = await fetch(`${host}${GQL_PATH}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query: buildQuery(folder) }),
+    ...opts,
   });
-
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const { data } = await res.json();
-
   // AEM GraphQL metadata fields use underscore-prefix (_publishUrl etc.)
   /* eslint-disable no-underscore-dangle */
   return (data?.articleList?.items ?? []).map((item) => ({
@@ -33,6 +36,16 @@ async function fetchArticles(folder) {
     description: item.main?.plaintext?.trim() ?? '',
   }));
   /* eslint-enable no-underscore-dangle */
+}
+
+async function fetchArticles(folder) {
+  // Try author first (succeeds in Universal Editor where the user is authenticated),
+  // then fall back to the publish endpoint for EDS delivery.
+  try {
+    return await gqlFetch(AEM_AUTHOR, folder, { credentials: 'include' });
+  } catch {
+    return gqlFetch(AEM_PUBLISH, folder);
+  }
 }
 
 function truncate(str) {
@@ -47,7 +60,7 @@ function buildCard(item) {
     const fig = document.createElement('figure');
     fig.className = 'cf-cards-item-figure';
     const img = document.createElement('img');
-    img.src = item.imageUrl.startsWith('http') ? item.imageUrl : `${AEM_HOST}${item.imageUrl}`;
+    img.src = item.imageUrl.startsWith('http') ? item.imageUrl : `${AEM_PUBLISH}${item.imageUrl}`;
     img.alt = item.title;
     img.loading = 'lazy';
     fig.append(img);
@@ -74,7 +87,9 @@ function buildCard(item) {
 }
 
 export default async function decorate(block) {
-  const folder = block.querySelector('div > div')?.textContent.trim();
+  // aem-content fields render as <a href="/content/dam/...">; text fields are plain text
+  const link = block.querySelector('a');
+  const folder = link ? link.getAttribute('href') : block.querySelector('div > div')?.textContent.trim();
   block.textContent = '';
 
   if (!folder) return;
