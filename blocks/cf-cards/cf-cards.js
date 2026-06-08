@@ -2,7 +2,7 @@
 // publish is the fallback for EDS delivery.
 const AEM_AUTHOR = 'https://author-p60206-e1481934.adobeaemcloud.com';
 const AEM_PUBLISH = 'https://publish-p60206-e1481934.adobeaemcloud.com';
-const GQL_PATH = '/content/_cq_graphql/aem-demo-assets/endpoint.json';
+const GQL_PATH = '/content/_cq_graphql/securbank/endpoint.json';
 const DESC_MAX = 120;
 
 function buildQuery(folder) {
@@ -12,8 +12,8 @@ function buildQuery(folder) {
     }) {
       items {
         title
-        featuredImage { _publishUrl }
-        main { plaintext }
+        image
+        content { plaintext }
       }
     }
   }`;
@@ -28,14 +28,11 @@ async function gqlFetch(host, folder, opts = {}) {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const { data } = await res.json();
-  // AEM GraphQL metadata fields use underscore-prefix (_publishUrl etc.)
-  /* eslint-disable no-underscore-dangle */
   return (data?.articleList?.items ?? []).map((item) => ({
     title: item.title ?? '',
-    imageUrl: item.featuredImage?._publishUrl ?? '',
-    description: item.main?.plaintext?.trim() ?? '',
+    imageUrl: item.image ?? '',
+    description: item.content?.plaintext?.trim() ?? '',
   }));
-  /* eslint-enable no-underscore-dangle */
 }
 
 async function fetchArticles(folder) {
