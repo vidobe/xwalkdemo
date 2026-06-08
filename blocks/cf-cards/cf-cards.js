@@ -1,5 +1,6 @@
 const AEM_AUTHOR = 'https://author-p60206-e1481934.adobeaemcloud.com';
 const AEM_PUBLISH = 'https://publish-p60206-e1481934.adobeaemcloud.com';
+const GQL = '/graphql/execute.json/securbank';
 const CF_API = '/adobe/sites/cf/fragments';
 const DESC_MAX = 120;
 
@@ -13,37 +14,72 @@ function stripHtml(html) {
   return div.textContent || div.innerText || '';
 }
 
-function toItems(items) {
+function truncate(str) {
+  return str.length > DESC_MAX ? `${str.slice(0, DESC_MAX).trimEnd()}…` : str;
+}
+
+// Extract the last path segment (folder name) to derive the persisted query name.
+// e.g. /content/dam/securbank/pages/articles → articles
+function queryName(path) {
+  return path.replace(/\.html$/, '').split('/').filter(Boolean).pop() ?? '';
+}
+
+// Parse a paginated GQL response — handles both standard {node,cursor} edges
+// and AEM's own edge shapes.
+function edgesToItems(data) {
+  const paginated = Object.values(data ?? {}).find((v) => v?.edges);
+  return (paginated?.edges ?? []).map((edge) => {
+    const item = edge.node
+      ?? Object.values(edge).find((v) => v && typeof v === 'object')
+      ?? {};
+    return {
+      title: item.title ?? '',
+      description: item.description?.plaintext
+        ?? (typeof item.description === 'string' ? item.description : '')
+        ?? item.body?.plaintext ?? '',
+      imageUrl: item.image ?? '',
+      slug: item.slug ?? '',
+    };
+  });
+}
+
+async function fetchViaGql(name) {
+  const res = await fetch(`${AEM_PUBLISH}${GQL}/${name};first=24`);
+  if (!res.ok) throw new Error(`GQL ${res.status}`);
+  const { data } = await res.json();
+  return edgesToItems(data);
+}
+
+async function fetchViaAuthorApi(path) {
+  const url = `${AEM_AUTHOR}${CF_API}?path=${encodeURIComponent(path)}&limit=24`;
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`REST ${res.status}`);
+  const { items } = await res.json();
   return (items ?? []).map((fragment) => ({
     title: getField(fragment, 'title'),
-    imageUrl: getField(fragment, 'image'),
     description: stripHtml(getField(fragment, 'content') || getField(fragment, 'description')),
+    imageUrl: getField(fragment, 'image'),
     slug: getField(fragment, 'slug'),
   }));
 }
 
-async function fetchFromHost(host, path, opts = {}) {
-  const url = `${host}${CF_API}?path=${encodeURIComponent(path)}&limit=24`;
-  const res = await fetch(url, opts);
-  if (!res.ok) throw new Error(`HTTP ${res.status} from ${host}`);
-  const { items } = await res.json();
-  return toItems(items);
-}
+async function fetchItems(rawPath) {
+  // crosswalk adds .html — strip it to get the bare JCR path
+  const path = rawPath.replace(/\.html$/, '');
+  const name = queryName(path);
 
-async function fetchArticles(path) {
-  // Try publish first — no auth, CORS-accessible, works for EDS preview & live
-  try {
-    return await fetchFromHost(AEM_PUBLISH, path);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('cf-cards: publish failed, trying author:', e.message);
+  // Publish GQL persisted query: CORS-safe GET, no auth — works in EDS preview & live
+  if (name) {
+    try {
+      return await fetchViaGql(name);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('cf-cards: GQL failed, trying author REST:', e.message);
+    }
   }
-  // Fall back to author with session cookies — works inside Universal Editor
-  return fetchFromHost(AEM_AUTHOR, path, { credentials: 'include' });
-}
 
-function truncate(str) {
-  return str.length > DESC_MAX ? `${str.slice(0, DESC_MAX).trimEnd()}…` : str;
+  // Author CF REST API with session cookies: works inside Universal Editor
+  return fetchViaAuthorApi(path);
 }
 
 function buildCard(item) {
@@ -76,19 +112,29 @@ function buildCard(item) {
     body.append(p);
   }
 
+  if (item.slug) {
+    const a = document.createElement('a');
+    a.href = `/articles/${item.slug}`;
+    a.className = 'cf-cards-item-link';
+    a.textContent = 'Read more';
+    body.append(a);
+  }
+
   li.append(body);
   return li;
 }
 
 export default async function decorate(block) {
-  // aem-content fields render as <a href="..."> (absolute or relative path)
+  // aem-content fields render as <a href="..."> (may be absolute URL or relative path)
   const link = block.querySelector('a');
-  const raw = link ? link.getAttribute('href') : block.querySelector('div > div')?.textContent.trim();
+  const raw = link
+    ? link.getAttribute('href')
+    : block.querySelector('div > div')?.textContent.trim();
   block.textContent = '';
 
   if (!raw) return;
 
-  // Extract the JCR path from what may be a full absolute URL
+  // If an absolute URL, extract just the pathname
   let path = raw;
   try { path = new URL(raw).pathname; } catch { /* already a path */ }
 
@@ -96,8 +142,8 @@ export default async function decorate(block) {
   ul.className = 'cf-cards-list';
 
   try {
-    const items = await fetchArticles(path);
-    if (items.length === 0) {
+    const items = await fetchItems(path);
+    if (!items.length) {
       const li = document.createElement('li');
       li.className = 'cf-cards-item-error';
       li.textContent = 'No content found.';
