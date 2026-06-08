@@ -1,16 +1,8 @@
-/* cards wrapper immediately after hero: overlap the banner */
+/* overlap the hero banner */
 .hero-wrapper + .cards-wrapper {
   position: relative;
   z-index: 2;
-  margin-top: -60px;
-}
-
-/* full-bleed: remove the section's 16px side margins and 1200px max-width */
-.section > .hero-wrapper + .cards-wrapper {
-  max-width: unset;
-  margin-left: -16px;
-  margin-right: -16px;
-  padding: 0;
+  margin-top: -40px;
 }
 
 .cards > ul {
