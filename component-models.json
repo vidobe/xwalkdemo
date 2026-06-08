@@ -214,5 +214,18 @@
         "valueType": "string"
       }
     ]
+  },
+  {
+    "id": "cf-cards",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "folder",
+        "label": "DAM Folder Path",
+        "description": "AEM DAM folder containing article fragments, e.g. /content/dam/belastingdienst/articles",
+        "value": ""
+      }
+    ]
   }
 ]
