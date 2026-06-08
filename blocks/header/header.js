@@ -123,8 +123,8 @@ export default async function decorate(block) {
   if (navTools) {
     navTools.innerHTML = `
       <form class="nav-search-form" role="search" action="/zoeken">
-        <input type="search" placeholder="What are you looking for?" aria-label="Search" />
-        <button type="submit" aria-label="Search">&#128269;</button>
+        <input type="text" placeholder="What are you looking for?" aria-label="Search" />
+        <button type="submit" aria-label="Search"></button>
       </form>
       <a class="nav-login" href="/inloggen">Log in</a>
     `;
