@@ -3,6 +3,10 @@ import { loadFragment } from '../fragment/fragment.js';
 
 const isDesktop = window.matchMedia('(min-width: 900px)');
 
+const ICON_HOUSE = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`;
+const ICON_WAFFLE = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 10h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 16h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4z"/></svg>`;
+const ICON_SEARCH = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+
 function toggleAllNavSections(sections, expanded = false) {
   sections.querySelectorAll('.nav-sections .default-content-wrapper > ul > li').forEach((section) => {
     section.setAttribute('aria-expanded', expanded);
@@ -33,9 +37,7 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
       }
     });
   } else {
-    navDrops.forEach((drop) => {
-      drop.removeAttribute('tabindex');
-    });
+    navDrops.forEach((drop) => drop.removeAttribute('tabindex'));
   }
   if (!expanded || isDesktop.matches) {
     window.addEventListener('keydown', (e) => {
@@ -90,6 +92,15 @@ export default async function decorate(block) {
   if (navSections) {
     navSections.querySelectorAll(':scope .default-content-wrapper > ul > li').forEach((navSection) => {
       if (navSection.querySelector('ul')) navSection.classList.add('nav-drop');
+
+      // prepend icons based on link text
+      const text = navSection.textContent.trim().toLowerCase();
+      if (text.startsWith('home')) {
+        navSection.insertAdjacentHTML('afterbegin', `<span class="nav-icon">${ICON_HOUSE}</span>`);
+      } else if (text.startsWith('menu')) {
+        navSection.insertAdjacentHTML('afterbegin', `<span class="nav-icon">${ICON_WAFFLE}</span>`);
+      }
+
       navSection.addEventListener('click', () => {
         if (isDesktop.matches) {
           const expanded = navSection.getAttribute('aria-expanded') === 'true';
@@ -106,7 +117,7 @@ export default async function decorate(block) {
     navTools.innerHTML = `
       <form class="nav-search-form" role="search" action="/zoeken">
         <input type="text" placeholder="What are you looking for?" aria-label="Search" />
-        <button type="submit" aria-label="Search"></button>
+        <button type="submit" aria-label="Search" class="nav-search-btn">${ICON_SEARCH}</button>
       </form>
       <a class="nav-login" href="/inloggen">Log in</a>
     `;
