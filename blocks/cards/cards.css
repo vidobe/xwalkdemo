@@ -2,14 +2,14 @@
   background-color: #ddeef6;
   margin-top: -40px !important;
   position: relative;
-  z-index: 1;
-  padding: 32px 0 40px !important;
+  z-index: 2;
+  padding: 0 !important;
 }
 
 .cards-container .cards-wrapper {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 32px 24px 40px;
 }
 
 .cards > ul {
@@ -17,7 +17,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 0;
 }
 
@@ -25,7 +25,7 @@
   background-color: #fff;
   border: none;
   border-right: 1px solid #b8d8e8;
-  padding: 20px 24px 24px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
 }
@@ -37,51 +37,67 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
-.cards .cards-card-body h3 {
+.cards .cards-card-body h3,
+.cards .cards-card-body h2 {
   font-size: 1rem;
   font-weight: 700;
   color: #111;
-  margin: 0 0 12px;
-  line-height: 1.3;
+  margin: 0;
+  line-height: 1.35;
 }
 
 .cards .cards-card-body p {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: #444;
-  margin: 0 0 16px;
-  flex: 1;
+  margin: 0;
 }
 
-.cards .cards-card-body p > a,
-.cards .cards-card-body .button-container a {
+/* reset boilerplate pill buttons — render as plain text links */
+.cards .cards-card-body .button-container { margin: 0; }
+
+.cards .cards-card-body .button-container a,
+.cards .cards-card-body a.button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   color: #01689b;
+  font-size: 0.875rem;
   font-weight: 600;
-  font-size: 0.9rem;
   text-decoration: none;
-  margin-top: auto;
+  box-shadow: none;
 }
 
-.cards .cards-card-body p > a::before,
-.cards .cards-card-body .button-container a::before {
+.cards .cards-card-body .button-container a::before,
+.cards .cards-card-body a.button::before {
   content: '›';
   font-size: 1.1rem;
 }
 
-.cards .cards-card-body p > a:hover,
-.cards .cards-card-body .button-container a:hover {
+.cards .cards-card-body .button-container a:hover,
+.cards .cards-card-body a.button:hover {
   text-decoration: underline;
+  background: none;
 }
 
 .cards .cards-card-image { display: none; }
 
 @media (width < 900px) {
-  .cards > ul { grid-template-columns: 1fr; }
-  .cards > ul > li { border-right: none; border-bottom: 1px solid #b8d8e8; }
+  .cards > ul {
+    grid-template-columns: 1fr;
+  }
+
+  .cards > ul > li {
+    border-right: none;
+    border-bottom: 1px solid #b8d8e8;
+  }
+
   .cards > ul > li:last-child { border-bottom: none; }
   .cards-container { margin-top: -20px !important; }
 }
