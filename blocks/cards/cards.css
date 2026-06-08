@@ -21,10 +21,19 @@
   flex-direction: column;
 }
 
+.cards .cards-card-image {
+  display: none;
+}
+
 .cards .cards-card-body {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+/* hide empty first-column div when no image was authored */
+.cards .cards-card-body:empty {
+  display: none;
 }
 
 .cards .cards-card-body h2,
@@ -36,7 +45,7 @@
   line-height: 1.35;
 }
 
-/* description paragraphs expand to fill space — excludes the link button-container */
+/* only description paragraphs expand — not the link button-container */
 .cards .cards-card-body p:not(.button-container) {
   font-size: 0.875rem;
   color: #444;
@@ -78,10 +87,6 @@
 .cards .cards-card-body a.button:hover {
   background: none;
   text-decoration: underline;
-}
-
-.cards .cards-card-image {
-  display: none;
 }
 
 @media (width < 900px) {
