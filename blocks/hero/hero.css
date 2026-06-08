@@ -62,10 +62,11 @@
   height: 100%;
 }
 
+/* text container: aligned with nav items (nav-row 24px + link 19px = 43px) */
 .hero > div:last-child > div {
   max-width: 1248px;
   margin: 0 auto;
-  padding: 40px 24px 100px;
+  padding: 40px 24px 100px 44px;
 }
 
 /* full-bleed: remove the section's 16px side margins and 1200px max-width from the wrapper */
@@ -81,7 +82,7 @@
   }
 
   .hero > div:last-child > div {
-    padding: 44px 32px 110px;
+    padding: 44px 32px 110px 44px;
   }
 
   .hero h1 {
