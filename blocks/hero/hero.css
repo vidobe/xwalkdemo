@@ -1,19 +1,42 @@
-.hero-container .hero-wrapper {
-  max-width: unset;
-  padding: 0;
-}
-
 .hero {
   position: relative;
   min-height: 420px;
   overflow: hidden;
 }
 
-/* image layer — fills the full hero block */
-.hero picture {
+.hero::after {
+  content: '';
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 30%) 0%, rgb(0 0 0 / 55%) 100%);
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  max-width: 680px;
+}
+
+.hero h5 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+.hero p {
+  margin: 0;
+  color: #fff;
+  font-size: 1.05rem;
+}
+
+.hero picture {
+  display: block;
+  height: 100%;
 }
 
 .hero img {
@@ -23,39 +46,34 @@
   display: block;
 }
 
-/* dark overlay */
-.hero::after {
-  content: '';
+/* image row fills hero as absolute background */
+.hero > div:first-child {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  background: linear-gradient(to bottom, rgb(0 0 0 / 25%) 0%, rgb(0 0 0 / 55%) 100%);
 }
 
-/* text wrapper — matches nav container alignment exactly */
-.hero .default-content-wrapper {
+/* text row sits above overlay */
+.hero > div:last-child {
   position: relative;
   z-index: 2;
+}
+
+.hero > div:first-child > div {
+  height: 100%;
+}
+
+.hero > div:last-child > div {
   max-width: 1248px;
   margin: 0 auto;
   padding: 40px 24px 100px;
 }
 
-.hero h1,
-.hero h2 {
-  margin: 0 0 10px;
-  color: #fff;
-  font-size: 2.2rem;
-  font-weight: 700;
-  line-height: 1.2;
-  max-width: 680px;
-}
-
-.hero p {
-  margin: 0;
-  color: #fff;
-  font-size: 1.05rem;
-  max-width: 600px;
+/* full-bleed: counters section's 16px side margins and 1200px max-width */
+main > div > .hero,
+main > .section > .hero {
+  max-width: unset;
+  margin: 0 -16px;
+  padding: 0;
 }
 
 @media (width >= 900px) {
@@ -63,12 +81,11 @@
     min-height: 460px;
   }
 
-  .hero .default-content-wrapper {
+  .hero > div:last-child > div {
     padding: 44px 32px 110px;
   }
 
-  .hero h1,
-  .hero h2 {
+  .hero h1 {
     font-size: 2.6rem;
   }
 }
