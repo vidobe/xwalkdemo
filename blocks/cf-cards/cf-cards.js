@@ -1,4 +1,5 @@
 const AEM_AUTHOR = 'https://author-p60206-e1481934.adobeaemcloud.com';
+const AEM_PUBLISH = 'https://publish-p60206-e1481934.adobeaemcloud.com';
 const CF_API = '/adobe/sites/cf/fragments';
 const DESC_MAX = 120;
 
@@ -12,19 +13,33 @@ function stripHtml(html) {
   return div.textContent || div.innerText || '';
 }
 
-async function fetchArticles(folder) {
-  // aem-content href may be an absolute URL — extract just the pathname
-  let path = folder;
-  try { path = new URL(folder).pathname; } catch { /* already a path */ }
-  const url = `${AEM_AUTHOR}${CF_API}?path=${encodeURIComponent(path)}&limit=24`;
-  const res = await fetch(url, { credentials: 'include' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const { items } = await res.json();
+function toItems(items) {
   return (items ?? []).map((fragment) => ({
     title: getField(fragment, 'title'),
     imageUrl: getField(fragment, 'image'),
-    description: stripHtml(getField(fragment, 'content')),
+    description: stripHtml(getField(fragment, 'content') || getField(fragment, 'description')),
+    slug: getField(fragment, 'slug'),
   }));
+}
+
+async function fetchFromHost(host, path, opts = {}) {
+  const url = `${host}${CF_API}?path=${encodeURIComponent(path)}&limit=24`;
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error(`HTTP ${res.status} from ${host}`);
+  const { items } = await res.json();
+  return toItems(items);
+}
+
+async function fetchArticles(path) {
+  // Try publish first — no auth, CORS-accessible, works for EDS preview & live
+  try {
+    return await fetchFromHost(AEM_PUBLISH, path);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('cf-cards: publish failed, trying author:', e.message);
+  }
+  // Fall back to author with session cookies — works inside Universal Editor
+  return fetchFromHost(AEM_AUTHOR, path, { credentials: 'include' });
 }
 
 function truncate(str) {
@@ -66,19 +81,30 @@ function buildCard(item) {
 }
 
 export default async function decorate(block) {
-  // aem-content fields render as <a href="/content/dam/...">; text fields are plain text
+  // aem-content fields render as <a href="..."> (absolute or relative path)
   const link = block.querySelector('a');
-  const folder = link ? link.getAttribute('href') : block.querySelector('div > div')?.textContent.trim();
+  const raw = link ? link.getAttribute('href') : block.querySelector('div > div')?.textContent.trim();
   block.textContent = '';
 
-  if (!folder) return;
+  if (!raw) return;
+
+  // Extract the JCR path from what may be a full absolute URL
+  let path = raw;
+  try { path = new URL(raw).pathname; } catch { /* already a path */ }
 
   const ul = document.createElement('ul');
   ul.className = 'cf-cards-list';
 
   try {
-    const items = await fetchArticles(folder);
-    items.forEach((item) => ul.append(buildCard(item)));
+    const items = await fetchArticles(path);
+    if (items.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'cf-cards-item-error';
+      li.textContent = 'No content found.';
+      ul.append(li);
+    } else {
+      items.forEach((item) => ul.append(buildCard(item)));
+    }
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('cf-cards:', err.message);
