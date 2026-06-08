@@ -50,7 +50,7 @@ header .nav-row {
   display: flex;
   align-items: center;
   height: var(--nav-row-height);
-  border-top: 1px solid var(--bld-border);
+  
   padding: 0 24px;
 }
 
@@ -157,7 +157,7 @@ header nav .nav-tools .nav-search-form {
   border: 1px solid var(--bld-border);
   border-radius: 2px;
   overflow: hidden;
-  height: 36px;
+  height: 36px; display: flex; align-items: center; justify-content: center;
 }
 
 header nav .nav-tools .nav-search-form input[type='text'] {
@@ -174,7 +174,7 @@ header nav .nav-tools .nav-search-form input[type='text'] {
 header nav .nav-tools .nav-search-form button {
   background: var(--bld-blue-mid);
   border: none;
-  width: 38px;
+  width: 36px;
   height: 100%;
   cursor: pointer;
   flex-shrink: 0;
