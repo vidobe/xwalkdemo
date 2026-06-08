@@ -1,48 +1,27 @@
-// AEM endpoints – author is tried first (works in UE where user is authenticated),
-// publish is the fallback for EDS delivery.
 const AEM_AUTHOR = 'https://author-p60206-e1481934.adobeaemcloud.com';
-const AEM_PUBLISH = 'https://publish-p60206-e1481934.adobeaemcloud.com';
-const GQL_PATH = '/content/_cq_graphql/securbank/endpoint.json';
+const CF_API = '/adobe/sites/cf/fragments';
 const DESC_MAX = 120;
 
-function buildQuery(folder) {
-  return `{
-    articleList(filter: {
-      _path: { _expressions: [{ value: ${JSON.stringify(folder)}, _operator: STARTS_WITH }] }
-    }) {
-      items {
-        title
-        image
-        content { plaintext }
-      }
-    }
-  }`;
+function getField(fragment, name) {
+  return fragment.fields?.find((f) => f.name === name)?.values?.[0] ?? '';
 }
 
-async function gqlFetch(host, folder, opts = {}) {
-  const res = await fetch(`${host}${GQL_PATH}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: buildQuery(folder) }),
-    ...opts,
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const { data } = await res.json();
-  return (data?.articleList?.items ?? []).map((item) => ({
-    title: item.title ?? '',
-    imageUrl: item.image ?? '',
-    description: item.content?.plaintext?.trim() ?? '',
-  }));
+function stripHtml(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent || div.innerText || '';
 }
 
 async function fetchArticles(folder) {
-  // Try author first (succeeds in Universal Editor where the user is authenticated),
-  // then fall back to the publish endpoint for EDS delivery.
-  try {
-    return await gqlFetch(AEM_AUTHOR, folder, { credentials: 'include' });
-  } catch {
-    return gqlFetch(AEM_PUBLISH, folder);
-  }
+  const url = `${AEM_AUTHOR}${CF_API}?path=${encodeURIComponent(folder)}&limit=24`;
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const { items } = await res.json();
+  return (items ?? []).map((fragment) => ({
+    title: getField(fragment, 'title'),
+    imageUrl: getField(fragment, 'image'),
+    description: stripHtml(getField(fragment, 'content')),
+  }));
 }
 
 function truncate(str) {
@@ -57,7 +36,7 @@ function buildCard(item) {
     const fig = document.createElement('figure');
     fig.className = 'cf-cards-item-figure';
     const img = document.createElement('img');
-    img.src = item.imageUrl.startsWith('http') ? item.imageUrl : `${AEM_PUBLISH}${item.imageUrl}`;
+    img.src = item.imageUrl.startsWith('http') ? item.imageUrl : `${AEM_AUTHOR}${item.imageUrl}`;
     img.alt = item.title;
     img.loading = 'lazy';
     fig.append(img);

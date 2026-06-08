@@ -161,6 +161,16 @@
     ]
   },
   {
+    "id": "cf-cards",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "folder",
+        "label": "Content Fragment Folder"
+      }
+    ]
+  },
+  {
     "id": "columns",
     "fields": [
       {
