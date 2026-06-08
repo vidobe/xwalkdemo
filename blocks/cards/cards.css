@@ -1,8 +1,9 @@
-/* overlap the hero banner */
+/* cards wrapper immediately after hero: overlap the banner with a white cut */
 .hero-wrapper + .cards-wrapper {
   position: relative;
   z-index: 2;
-  margin-top: -40px;
+  margin-top: -50px;
+  background-color: #fff;
 }
 
 .cards > ul {
@@ -12,7 +13,6 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  background-color: #fff;
 }
 
 .cards > ul > li {
