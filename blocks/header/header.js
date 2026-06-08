@@ -3,48 +3,6 @@ import { loadFragment } from '../fragment/fragment.js';
 
 const isDesktop = window.matchMedia('(min-width: 900px)');
 
-function closeOnEscape(e) {
-  if (e.code === 'Escape') {
-    const nav = document.getElementById('nav');
-    const navSections = nav.querySelector('.nav-sections');
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-    if (navSectionExpanded && isDesktop.matches) {
-      toggleAllNavSections(navSections);
-      navSectionExpanded.focus();
-    } else if (!isDesktop.matches) {
-      toggleMenu(nav, navSections);
-      nav.querySelector('button').focus();
-    }
-  }
-}
-
-function closeOnFocusLost(e) {
-  const nav = e.currentTarget;
-  if (!nav.contains(e.relatedTarget)) {
-    const navSections = nav.querySelector('.nav-sections');
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-    if (navSectionExpanded && isDesktop.matches) {
-      toggleAllNavSections(navSections, false);
-    } else if (!isDesktop.matches) {
-      toggleMenu(nav, navSections, false);
-    }
-  }
-}
-
-function openOnKeydown(e) {
-  const focused = document.activeElement;
-  const isNavDrop = focused.className === 'nav-drop';
-  if (isNavDrop && (e.code === 'Enter' || e.code === 'Space')) {
-    const dropExpanded = focused.getAttribute('aria-expanded') === 'true';
-    toggleAllNavSections(focused.closest('.nav-sections'));
-    focused.setAttribute('aria-expanded', dropExpanded ? 'false' : 'true');
-  }
-}
-
-function focusNavSection() {
-  document.activeElement.addEventListener('keydown', openOnKeydown);
-}
-
 function toggleAllNavSections(sections, expanded = false) {
   sections.querySelectorAll('.nav-sections .default-content-wrapper > ul > li').forEach((section) => {
     section.setAttribute('aria-expanded', expanded);
@@ -63,21 +21,45 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
     navDrops.forEach((drop) => {
       if (!drop.hasAttribute('tabindex')) {
         drop.setAttribute('tabindex', 0);
-        drop.addEventListener('focus', focusNavSection);
+        drop.addEventListener('focus', () => {
+          drop.addEventListener('keydown', (e) => {
+            if (e.code === 'Enter' || e.code === 'Space') {
+              const dropExpanded = drop.getAttribute('aria-expanded') === 'true';
+              toggleAllNavSections(navSections);
+              drop.setAttribute('aria-expanded', dropExpanded ? 'false' : 'true');
+            }
+          });
+        });
       }
     });
   } else {
     navDrops.forEach((drop) => {
       drop.removeAttribute('tabindex');
-      drop.removeEventListener('focus', focusNavSection);
     });
   }
   if (!expanded || isDesktop.matches) {
-    window.addEventListener('keydown', closeOnEscape);
-    nav.addEventListener('focusout', closeOnFocusLost);
-  } else {
-    window.removeEventListener('keydown', closeOnEscape);
-    nav.removeEventListener('focusout', closeOnFocusLost);
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape') {
+        const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
+        if (navSectionExpanded && isDesktop.matches) {
+          toggleAllNavSections(navSections);
+          navSectionExpanded.focus();
+        } else if (!isDesktop.matches) {
+          toggleMenu(nav, navSections);
+          nav.querySelector('button').focus();
+        }
+      }
+    });
+    nav.addEventListener('focusout', (e) => {
+      if (!nav.contains(e.relatedTarget)) {
+        const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
+        if (navSectionExpanded && isDesktop.matches) {
+          toggleAllNavSections(navSections, false);
+        } else if (!isDesktop.matches) {
+          toggleMenu(nav, navSections, false);
+        }
+      }
+    });
   }
 }
 
@@ -129,6 +111,13 @@ export default async function decorate(block) {
       <a class="nav-login" href="/inloggen">Log in</a>
     `;
   }
+
+  // wrap sections + tools in a shared nav row
+  const navRow = document.createElement('div');
+  navRow.className = 'nav-row';
+  if (navSections) navRow.append(navSections);
+  if (navTools) navRow.append(navTools);
+  nav.append(navRow);
 
   // hamburger
   const hamburger = document.createElement('div');
