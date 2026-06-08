@@ -46,13 +46,13 @@
   display: block;
 }
 
-/* image row fills hero as absolute background */
+/* image row: fills hero as absolute background */
 .hero > div:first-child {
   position: absolute;
   inset: 0;
 }
 
-/* text row sits above overlay */
+/* text row: sits above overlay */
 .hero > div:last-child {
   position: relative;
   z-index: 2;
@@ -68,9 +68,8 @@
   padding: 40px 24px 100px;
 }
 
-/* full-bleed: counters section's 16px side margins and 1200px max-width */
-main > div > .hero,
-main > .section > .hero {
+/* full-bleed: remove the section's 16px side margins and 1200px max-width from the wrapper */
+.section > .hero-wrapper {
   max-width: unset;
   margin: 0 -16px;
   padding: 0;
