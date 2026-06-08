@@ -1,6 +1,6 @@
 .cards-container {
   background-color: #ddeef6;
-  margin-top: -40px !important;
+  margin-top: -80px !important;
   position: relative;
   z-index: 2;
   padding: 0 !important;
@@ -9,7 +9,7 @@
 .cards-container .cards-wrapper {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px 40px;
+  padding: 0 24px 40px;
 }
 
 .cards > ul {
@@ -22,7 +22,7 @@
 }
 
 .cards > ul > li {
-  background-color: #fff;
+  background-color: #e8f4fb;
   border: none;
   border-right: 1px solid #b8d8e8;
   padding: 24px;
@@ -30,7 +30,9 @@
   flex-direction: column;
 }
 
-.cards > ul > li:last-child { border-right: none; }
+.cards > ul > li:last-child {
+  border-right: none;
+}
 
 .cards .cards-card-body {
   margin: 0;
@@ -55,8 +57,10 @@
   margin: 0;
 }
 
-/* reset boilerplate pill buttons — render as plain text links */
-.cards .cards-card-body .button-container { margin: 0; }
+.cards .cards-card-body .button-container {
+  margin: 0;
+  margin-top: auto;
+}
 
 .cards .cards-card-body .button-container a,
 .cards .cards-card-body a.button {
@@ -77,16 +81,18 @@
 .cards .cards-card-body .button-container a::before,
 .cards .cards-card-body a.button::before {
   content: '›';
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .cards .cards-card-body .button-container a:hover,
 .cards .cards-card-body a.button:hover {
-  text-decoration: underline;
   background: none;
+  text-decoration: underline;
 }
 
-.cards .cards-card-image { display: none; }
+.cards .cards-card-image {
+  display: none;
+}
 
 @media (width < 900px) {
   .cards > ul {
@@ -98,6 +104,11 @@
     border-bottom: 1px solid #b8d8e8;
   }
 
-  .cards > ul > li:last-child { border-bottom: none; }
-  .cards-container { margin-top: -20px !important; }
+  .cards > ul > li:last-child {
+    border-bottom: none;
+  }
+
+  .cards-container {
+    margin-top: -30px !important;
+  }
 }
