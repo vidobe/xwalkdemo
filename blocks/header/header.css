@@ -264,3 +264,28 @@ header nav .nav-hamburger { display: none; }
   header nav .nav-sections ul > li { height: 48px; padding: 0 24px; border-bottom: none; }
   header nav .nav-tools .nav-search-form input[type='text'] { width: 140px; }
 }
+/* nav icons */
+header nav .nav-sections .nav-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  color: currentcolor;
+}
+
+/* search button square with icon */
+header nav .nav-tools .nav-search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: var(--bld-blue-mid);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+header nav .nav-tools .nav-search-btn:hover { background: var(--bld-blue); }
+
